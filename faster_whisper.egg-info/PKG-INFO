@@ -1,3 +1,51 @@
+Metadata-Version: 2.4
+Name: faster-whisper
+Version: 1.1.0
+Summary: Faster Whisper transcription with CTranslate2
+Home-page: https://github.com/SYSTRAN/faster-whisper
+Author: Guillaume Klein
+License: MIT
+Keywords: openai whisper speech ctranslate2 inference quantization transformer
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: ctranslate2@ git+https://github.com/NADOOIT/CTranslate2.git@surfer
+Requires-Dist: huggingface_hub>=0.13
+Requires-Dist: tokenizers<1,>=0.13
+Requires-Dist: onnxruntime<2,>=1.14
+Requires-Dist: av>=11
+Requires-Dist: tqdm
+Provides-Extra: conversion
+Requires-Dist: transformers[torch]>=4.23; extra == "conversion"
+Provides-Extra: dev
+Requires-Dist: black==23.*; extra == "dev"
+Requires-Dist: flake8==6.*; extra == "dev"
+Requires-Dist: isort==5.*; extra == "dev"
+Requires-Dist: pytest==7.*; extra == "dev"
+Dynamic: author
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license
+Dynamic: license-file
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
 [![CI](https://github.com/SYSTRAN/faster-whisper/workflows/CI/badge.svg)](https://github.com/SYSTRAN/faster-whisper/actions?query=workflow%3ACI) [![PyPI version](https://badge.fury.io/py/faster-whisper.svg)](https://badge.fury.io/py/faster-whisper)
 
 # Faster Whisper transcription with CTranslate2
@@ -57,28 +105,6 @@ For reference, here's the time and memory usage that are required to transcribe 
 ## Requirements
 
 * Python 3.8 or greater
-
-
-## Automatic Hardware Detection
-
-By default, faster-whisper automatically selects the best device and compute_type for your hardware (NVIDIA GPU, Apple Silicon, or CPU). You do not need to set these options manually—optimal performance is used out of the box!
-
-**Minimal Usage Example:**
-
-```python
-from faster_whisper import WhisperModel
-model = WhisperModel("large-v3")  # Auto hardware selection
-```
-
-- On NVIDIA GPUs, this selects `cuda` + `float16`.
-- On Apple Silicon (M1/M2/M3), this selects `mps` + `float16`.
-- On CPU-only systems, it selects `cpu` + `int8`.
-
-If you want to override this behavior, you can still set `device` and/or `compute_type` explicitly:
-
-```python
-model = WhisperModel("large-v3", device="cpu", compute_type="int8")
-```
 
 Unlike openai-whisper, FFmpeg does **not** need to be installed on the system. The audio is decoded with the Python library [PyAV](https://github.com/PyAV-Org/PyAV) which bundles the FFmpeg libraries in its package.
 

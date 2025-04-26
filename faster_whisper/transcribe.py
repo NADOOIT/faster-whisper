@@ -617,6 +617,19 @@ class WhisperModel:
         """
         self.logger = get_logger()
 
+        # Automatische Hardware-Erkennung
+        if device in ("auto", None, "default"):
+            from .auto_device import detect_best_device_and_type
+            device, auto_compute_type = detect_best_device_and_type()
+            if compute_type in ("default", None):
+                compute_type = auto_compute_type
+            self.logger.info(f"[Auto device selection] Using device='{device}', compute_type='{compute_type}'")
+        elif compute_type in ("default", None):
+            # device explizit, compute_type nicht: bestimme nur compute_type passend zum device
+            from .auto_device import detect_best_device_and_type
+            _, compute_type = detect_best_device_and_type(prefer_gpu=(device=="cuda"))
+            self.logger.info(f"[Auto compute_type selection] Using device='{device}', compute_type='{compute_type}'")
+
         tokenizer_bytes, preprocessor_bytes = None, None
         if files:
             model_path = model_size_or_path

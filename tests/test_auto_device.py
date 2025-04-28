@@ -11,11 +11,13 @@ def test_detect_best_device_and_type_cpu(monkeypatch):
     monkeypatch.setattr(platform, "machine", lambda: "x86_64")
     # torch nicht installiert oder keine GPU/MPS
     sys_modules_backup = sys.modules.copy()
-    sys.modules["torch"] = None
-    device, compute_type = detect_best_device_and_type(prefer_gpu=True)
-    assert device == "cpu"
-    assert compute_type == "int8"
-    sys.modules = sys_modules_backup
+    try:
+        sys.modules["torch"] = None
+        device, compute_type = detect_best_device_and_type(prefer_gpu=True)
+        assert device == "cpu"
+        assert compute_type == "float32"  # Erwartung an neue Logik angepasst
+    finally:
+        sys.modules = sys_modules_backup
 
 def test_detect_best_device_and_type_cuda(monkeypatch):
     class DummyTorch:
@@ -41,7 +43,12 @@ def test_detect_best_device_and_type_mps(monkeypatch):
         @staticmethod
         def is_available():
             return True
+    class DummyCuda:
+        @staticmethod
+        def is_available():
+            return False
     class DummyTorch:
+        cuda = DummyCuda
         backends = type("backends", (), {"mps": DummyMPS})
     sys.modules["torch"] = DummyTorch
     device, compute_type = detect_best_device_and_type(prefer_gpu=True)

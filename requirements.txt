@@ -1,6 +1,7 @@
-ctranslate2 @ git+https://github.com/NADOOIT/CTranslate2.git@This-is-the-past-
+ctranslate2 @ https://github.com/NADOOIT/CTranslate2/releases/download/v4.5.1/ctranslate2-4.5.1-cp312-cp312-macosx_15_0_arm64.whl
 huggingface_hub>=0.13
 tokenizers>=0.13,<1
 onnxruntime>=1.14,<2 
 av>=11
+tqdm
 tqdm

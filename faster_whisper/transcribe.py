@@ -9,8 +9,23 @@ from inspect import signature
 from math import ceil
 from typing import BinaryIO, Iterable, List, Optional, Tuple, Union
 from warnings import warn
+import os
+import logging
 
-import ctranslate2
+# Debug-Logging global steuerbar über Umgebungsvariable
+DEBUG = os.environ.get("FASTER_WHISPER_DEBUG", "0") == "1"
+logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
+logger = logging.getLogger("faster_whisper")
+
+try:
+    import ctranslate2
+except ImportError as e:
+    raise ImportError(
+        "Das Modul 'ctranslate2' ist nicht installiert oder konnte nicht geladen werden.\n"
+        "Bitte installiere ein passendes Wheel (siehe README und CTranslate2/BUILD_MPS.md).\n"
+        "Tipp: uv pip install /pfad/zu/ctranslate2-<version>-cp*-macosx_*.whl --force-reinstall\n"
+        "Weitere Hilfe: FAQ.md\n"
+    ) from e
 import numpy as np
 import tokenizers
 
@@ -70,6 +85,16 @@ class Segment:
 
 @dataclass
 class TranscriptionOptions:
+    """
+    Optionen für die Transkription.
+
+    Hauptparameter:
+    - beam_size, best_of, patience, length_penalty: Steuerung des Decodings
+    - temperatures: Sampling-Temperaturen
+    - language, task: Sprache und Aufgabe (transcribe/translate)
+    - word_timestamps: Wortgenaue Zeitmarken
+    - vad_filter: Sprachaktivitätserkennung (VAD)
+    """
     beam_size: int
     best_of: int
     patience: float
@@ -100,6 +125,14 @@ class TranscriptionOptions:
 
 @dataclass
 class TranscriptionInfo:
+    """
+    Ergebnis-Infos einer Transkription.
+
+    - language: Erkannte Sprache
+    - duration: Gesamtdauer der Audiodatei
+    - transcription_options: Verwendete Optionen
+    - vad_options: Verwendete VAD-Optionen
+    """
     language: str
     language_probability: float
     duration: float
@@ -110,6 +143,11 @@ class TranscriptionInfo:
 
 
 class BatchedInferencePipeline:
+    """
+    Pipeline für parallele/gestapelte Transkription mehrerer Audiodaten.
+
+    Ermöglicht Verarbeitung großer Mengen oder paralleler Requests.
+    """
     def __init__(
         self,
         model,
@@ -572,6 +610,13 @@ class BatchedInferencePipeline:
 
 
 class WhisperModel:
+    """
+    WhisperModel: Hauptklasse für schnelle, hardware-optimierte Transkription mit Whisper.
+
+    - Erkennt automatisch das beste Device (CPU, MPS, CUDA)
+    - Unterstützt verschiedene Modelle (tiny, base, small, medium, large)
+    - Einfache API für Einzel- und Batch-Transkription
+    """
     def __init__(
         self,
         model_size_or_path: str,
@@ -620,16 +665,24 @@ class WhisperModel:
         # Automatische Hardware-Erkennung
         if device in ("auto", None, "default"):
             from .auto_device import detect_best_device_and_type
+            orig_device = device
             device, auto_compute_type = detect_best_device_and_type()
-            if compute_type in ("default", None):
-                compute_type = auto_compute_type
-            self.logger.info(f"[Auto device selection] Using device='{device}', compute_type='{compute_type}'")
-        elif compute_type in ("default", None):
-            # device explizit, compute_type nicht: bestimme nur compute_type passend zum device
-            from .auto_device import detect_best_device_and_type
-            _, compute_type = detect_best_device_and_type(prefer_gpu=(device=="cuda"))
-            self.logger.info(f"[Auto compute_type selection] Using device='{device}', compute_type='{compute_type}'")
+            logging.debug(f"[Auto device selection] Ursprünglicher Wert: '{orig_device}', erkanntes Device: '{device}', compute_type: '{compute_type}'")
+            if device == "cpu":
+                logging.warning("[Device Fallback] Es wurde kein GPU-Device erkannt, CPU wird verwendet.")
+        else:
+            # Prüfe, ob das gewünschte Device unterstützt wird
+            supported = ctranslate2.list_supported_devices()
+            if device not in supported:
+                logging.error(f"Device '{device}' nicht unterstützt. Verfügbare Devices: {supported}")
+                raise ValueError(
+                    f"Device '{device}' wird nicht unterstützt. "
+                    f"Verfügbare Devices: {supported}.\n"
+                    f"Tipp: Nutze 'auto' für automatische Auswahl oder prüfe FAQ.md für Hilfe."
+                )
+        logging.debug(f"[Init] Modellpfad: {model_size_or_path}, Device: {device}, Compute-Type: {compute_type}, Threads: {cpu_threads}, Worker: {num_workers}")
 
+        # ...
         tokenizer_bytes, preprocessor_bytes = None, None
         if files:
             model_path = model_size_or_path

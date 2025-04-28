@@ -1,31 +1,37 @@
-# Contributing to faster-whisper
+# 🤝 Contributing Guide
 
-Contributions are welcome! Here are some pointers to help you install the library for development and validate your changes before submitting a pull request.
+Danke, dass du zu **faster-whisper** beitragen möchtest!
 
-## Install the library for development
-
-We recommend installing the module in editable mode with the `dev` extra requirements:
+## 1. Projekt einrichten
 
 ```bash
-git clone https://github.com/SYSTRAN/faster-whisper.git
-cd faster-whisper/
-pip install -e .[dev]
+uv venv .venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
 ```
 
-## Validate the changes before creating a pull request
-
-1. Make sure the existing tests are still passing (and consider adding new tests as well!):
+## 2. Tests ausführen
 
 ```bash
-pytest tests/
+.venv/bin/python -m pytest tests/test_auto_device.py
+.venv/bin/python -m pytest tests/test_tokenizer.py tests/test_transcribe.py
 ```
 
-2. Reformat and validate the code with the following tools:
+## 3. Code-Style
+- Halte dich an [PEP8](https://peps.python.org/pep-0008/).
+- Schreibe **aussagekräftige Docstrings** für alle Funktionen/Klassen.
+- Nutze sprechende Variablennamen und Kommentare.
 
-```bash
-black .
-isort .
-flake8 .
-```
+## 4. Pull Requests
+- Erstelle vor größeren Änderungen ein Issue oder diskutiere deine Idee.
+- Schreibe klare Commit-Nachrichten.
+- Teste vor dem PR alle relevanten Tests.
+- Nutze die [Issue-Templates](.github/ISSUE_TEMPLATE/) und das [FAQ](FAQ.md) für schnelle Hilfe.
 
-These steps are also run automatically in the CI when you open the pull request.
+## 5. Fragen & Hilfe
+- Lies README, FAQ und BUILD_MPS.md.
+- Nutze Issues für Bugs oder Feature-Wünsche.
+
+---
+
+**Wir freuen uns auf deinen Beitrag!**
